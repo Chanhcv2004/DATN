@@ -8,34 +8,34 @@
             <button class="auth-tab-btn" :class="{ active: activeTab === 'login' }" @click="switchTab('login')">Đăng Nhập</button>
             <button class="auth-tab-btn" :class="{ active: activeTab === 'register' }" @click="switchTab('register')">Đăng Ký</button>
           </div>
-          <form class="auth-form" :class="{ active: activeTab === 'login' }" id="login-form" @submit.prevent="handleSubmit('login')">
+          <form class="auth-form" :class="{ active: activeTab === 'login' }" id="login-form" @submit.prevent="login">
             <div class="form-group">
               <label class="form-label">Email</label>
-              <input type="email" class="form-input" placeholder="Nhập email của bạn" required>
+              <input type="email" class="form-input" v-model="loginForm.email" placeholder="Nhập email của bạn" required>
             </div>
             <div class="form-group">
               <label class="form-label">Mật khẩu</label>
-              <input type="password" class="form-input" placeholder="Nhập mật khẩu" required>
+              <input type="password" class="form-input" v-model="loginForm.password" placeholder="Nhập mật khẩu" required>
             </div>
             <button type="submit" class="btn form-submit">Đăng Nhập</button>
             <a href="#" class="form-link">Quên mật khẩu?</a>
           </form>
-          <form class="auth-form" :class="{ active: activeTab === 'register' }" id="register-form" @submit.prevent="handleSubmit('register')">
+          <form class="auth-form" :class="{ active: activeTab === 'register' }" id="register-form" @submit.prevent="register">
             <div class="form-group">
               <label class="form-label">Họ và tên</label>
-              <input type="text" class="form-input" placeholder="Nhập họ và tên" required>
+              <input type="text" class="form-input" v-model="registerForm.full_name" placeholder="Nhập họ và tên" required>
             </div>
             <div class="form-group">
               <label class="form-label">Email</label>
-              <input type="email" class="form-input" placeholder="Nhập email của bạn" required>
+              <input type="email" class="form-input" v-model="registerForm.email" placeholder="Nhập email của bạn" required>
             </div>
             <div class="form-group">
               <label class="form-label">Mật khẩu</label>
-              <input type="password" class="form-input" placeholder="Nhập mật khẩu" required>
+              <input type="password" class="form-input" v-model="registerForm.password" placeholder="Nhập mật khẩu" required>
             </div>
             <div class="form-group">
               <label class="form-label">Xác nhận mật khẩu</label>
-              <input type="password" class="form-input" placeholder="Xác nhận mật khẩu" required>
+              <input type="password" class="form-input" v-model="registerForm.password_confirm" placeholder="Xác nhận mật khẩu" required>
             </div>
             <button type="submit" class="btn form-submit">Đăng Ký</button>
           </form>
@@ -47,17 +47,72 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue';
+import axios from 'axios';
+import { useRouter } from 'vue-router';
 
-const activeTab = ref('login')
+const router = useRouter();
+const activeTab = ref('login');
+const registerForm = reactive({
+  full_name: "",
+  email: "",
+  password: "",
+  password_confirm: "",
+});
+
+const loginForm = reactive({
+  email: "",
+  password: "",
+});
+const login = async () => {
+  try {
+    const response = await axios.post('http://127.0.0.1:8000/api/login', {
+      email: loginForm.email,
+      password: loginForm.password
+    });
+    // console.log(response);
+    alert('Đăng nhập thành công');
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    router.push('/');
+  } catch (error) {
+    if (error.response?.status === 422) {
+      const errors = error.response.data.errors;
+      let msg = '❌ Lỗi:\n';
+      for (const field in errors) {
+        msg += `- ${errors[field][0]}\n`;
+      }
+      alert(msg);
+    } else {
+      alert(error.response?.data?.message || '❌ Lỗi không xác định');
+    }
+  }
+}
+
+const register = async () => {
+  try {
+    const response = await axios.post('http://127.0.0.1:8000/api/register', {
+      name_user: registerForm.full_name,
+      email: registerForm.email,
+      password: registerForm.password,
+      password_confirmation: registerForm.password_confirm
+    })
+    alert('✅ Đăng ký thành công!')
+  } catch (error) {
+    if (error.response?.status === 422) {
+      alert('❌ Lỗi: \n' + JSON.stringify(error.response.data.errors))
+    } else {
+      alert('❌ Lỗi không xác định')
+    }
+  }
+}
 
 const switchTab = (tab) => {
   activeTab.value = tab
 }
 
-const handleSubmit = (formType) => {
-  alert(formType === 'login' ? 'Đăng nhập thành công!' : 'Đăng ký thành công!')
-}
+// const handleSubmit = (formType) => {
+//   alert(formType === 'login' ? 'Đăng nhập thành công!' : 'Đăng ký thành công!')
+// }
 </script>
 
 <style scoped>
