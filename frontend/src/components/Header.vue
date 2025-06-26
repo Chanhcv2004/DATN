@@ -29,7 +29,14 @@
               <span class="nav-action-text">Search</span>
             </button>
           </li>
-          <li>
+          <li v-if="user && user.id">
+            <button @click="handleLogout" class="nav-action-btn">
+              <ion-icon name="log-out-outline" aria-hidden="true"></ion-icon>
+              <span class="nav-action-text">Logout</span>
+            </button>
+          </li>
+
+          <li v-else>
             <router-link to="/login" class="nav-action-btn">
               <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
               <span class="nav-action-text">Login / Register</span>
@@ -68,16 +75,57 @@
       </div>
     </div>
   </header>
+    <div id="toast" v-if="toastMessage" v-html="toastContent"></div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 
 const showSearchPopup = ref(false)
+const user = ref(null);
+const toastMessage = ref(false);
+const toastContent = ref("");
 
 const toggleSearchPopup = () => {
   showSearchPopup.value = !showSearchPopup.value
   document.body.classList.toggle('popup-open', showSearchPopup.value)
+}
+window.addEventListener('user-login', () => {
+  const storedUser = localStorage.getItem('user');
+  if (storedUser) {
+    user.value = JSON.parse(storedUser);
+  } else {
+    user.value = null;
+  }
+});
+const handleLogout = () => {
+  localStorage.removeItem('user');
+  user.value = null;
+      showToast('success', 'fa-solid fa-check-circle', 'Thành công', 'Đăng xuất thành công');
+  setTimeout(() => {
+    toastMessage.value = false;
+    router.push('/');
+  }, 3000)
+  
+};
+
+const showToast = (type, icon, title, message) => {
+  toastContent.value =
+    `
+            <div class="toast toast--${type}">
+                    <div class="toast__icon">
+                        <i class="${icon}"></i>
+                    </div>
+                    <div class="toast__body">
+                        <h3 class="toast__title">${title}</h3>
+                        <p class="toast__msg">${message}</p>
+                    </div>
+                    <div class="toast__close" onclick="this.parentElement.remove()">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                </div>
+            `;
+  toastMessage.value = true;
 }
 
 onMounted(() => {
@@ -95,7 +143,11 @@ onMounted(() => {
         overlay.classList.toggle("active")
       })
     }
-  })
+  });
+  const storedUser = localStorage.getItem('user');
+  if (storedUser) {
+    user.value = JSON.parse(storedUser);
+  }
 })
 </script>
 
@@ -126,7 +178,8 @@ onMounted(() => {
   padding: 30px;
   border-radius: 8px;
   width: 90%;
-  max-width: 600px; /* Tăng kích thước popup */
+  max-width: 600px;
+  /* Tăng kích thước popup */
   position: relative;
   transform: scale(0.8);
   transition: transform 0.3s ease;
@@ -179,7 +232,7 @@ onMounted(() => {
 }
 
 /* Làm mờ các phần tử ngoài popup */
-body.popup-open > *:not(.search-popup) {
+body.popup-open>*:not(.search-popup) {
   filter: blur(4px);
 }
 </style>

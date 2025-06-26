@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('url', 50);
             $table->unsignedBigInteger('image_able_id');
-            $table->foreign('image_able_id')->references('id')->on('products');
-            $table->string('image_able_type', 20);
+            $table->string('image_able_type', 20)->nullable();
             $table->timestamps();
         });
     }

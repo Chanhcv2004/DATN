@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('color', 10);
             $table->string('size', 10);
             $table->unsignedInteger('stock_quantity');
-            $table->string('image_color_var', 30);
+            $table->string('image_color_var', 30)->nullable();
             $table->timestamps();
         });
     }

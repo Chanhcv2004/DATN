@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('product_name', 100);
-            $table->decimal('price_original');
+            $table->decimal('price_original', 10, 2);
             $table->decimal('sale_price', 10, 2);
             $table->enum('status', ['Còn hàng', 'Hết hàng']);
+            $table->text('description', 255);
             $table->unsignedBigInteger('category_id');
             $table->foreign('category_id')->references('id')->on('categories');
             $table->unsignedBigInteger('brand_id');

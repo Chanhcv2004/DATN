@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Comment;
 use App\Models\Product;
+use App\Models\Image;
+use App\Models\Product_variant;
 
-class CommentController extends Controller
+class ProductDetailController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -64,29 +65,21 @@ class CommentController extends Controller
         //
     }
 
-    public function sendComment($product_code, $user_code, Request $request)
+    public function getProductById($product_id)
     {
-        $validated = $request->validate([
-            "comment_content" => "required|string|max:255"
-        ], ['comment_content.required' => 'Không có nội dung']);
+        $dataProductById = Product::with(['variants', 'images'])->find($product_id);
 
-        // Nếu product_code & user_code là ID:
-        $comment = Comment::create([
-            'user_id' => $user_code,
-            'product_id' => $product_code,
-            'status' => 'Hiện thị',
-            'comment_content' => $validated['comment_content'],
-        ]);
-
-        return response()->json('Đã gửi');
+        return response()->json($dataProductById);
     }
+    public function getRelatedProduct($category_id)
+    {
+        $dataRelatedProduct = Product::with(['images', 'category:id,category_name'])
+            ->where('category_id', $category_id)
+            ->inRandomOrder()
+            ->take(4)
+            ->get();
 
-    public function getCommentByIdProduct($product_id) {
-        $dataCommentById = Comment::join('users', 'comments.user_id', '=', 'users.id')
-        ->where('comments.product_id', $product_id)
-        ->select('comments.*', 'users.name_user')
-        ->get();
-        return response()->json($dataCommentById);
+        return response()->json($dataRelatedProduct);
     }
 
 }

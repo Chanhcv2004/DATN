@@ -5,37 +5,46 @@
         <div class="auth-form-container">
           <h2 class="auth-title">Đăng Nhập / Đăng Ký</h2>
           <div class="auth-tabs">
-            <button class="auth-tab-btn" :class="{ active: activeTab === 'login' }" @click="switchTab('login')">Đăng Nhập</button>
-            <button class="auth-tab-btn" :class="{ active: activeTab === 'register' }" @click="switchTab('register')">Đăng Ký</button>
+            <button class="auth-tab-btn" :class="{ active: activeTab === 'login' }" @click="switchTab('login')">Đăng
+              Nhập</button>
+            <button class="auth-tab-btn" :class="{ active: activeTab === 'register' }"
+              @click="switchTab('register')">Đăng Ký</button>
           </div>
           <form class="auth-form" :class="{ active: activeTab === 'login' }" id="login-form" @submit.prevent="login">
             <div class="form-group">
               <label class="form-label">Email</label>
-              <input type="email" class="form-input" v-model="loginForm.email" placeholder="Nhập email của bạn" required>
+              <input type="email" class="form-input" v-model="loginForm.email" placeholder="Nhập email của bạn"
+                required>
             </div>
             <div class="form-group">
               <label class="form-label">Mật khẩu</label>
-              <input type="password" class="form-input" v-model="loginForm.password" placeholder="Nhập mật khẩu" required>
+              <input type="password" class="form-input" v-model="loginForm.password" placeholder="Nhập mật khẩu"
+                required>
             </div>
             <button type="submit" class="btn form-submit">Đăng Nhập</button>
             <a href="#" class="form-link">Quên mật khẩu?</a>
           </form>
-          <form class="auth-form" :class="{ active: activeTab === 'register' }" id="register-form" @submit.prevent="register">
+          <form class="auth-form" :class="{ active: activeTab === 'register' }" id="register-form"
+            @submit.prevent="register">
             <div class="form-group">
               <label class="form-label">Họ và tên</label>
-              <input type="text" class="form-input" v-model="registerForm.full_name" placeholder="Nhập họ và tên" required>
+              <input type="text" class="form-input" v-model="registerForm.full_name" placeholder="Nhập họ và tên"
+                required>
             </div>
             <div class="form-group">
               <label class="form-label">Email</label>
-              <input type="email" class="form-input" v-model="registerForm.email" placeholder="Nhập email của bạn" required>
+              <input type="email" class="form-input" v-model="registerForm.email" placeholder="Nhập email của bạn"
+                required>
             </div>
             <div class="form-group">
               <label class="form-label">Mật khẩu</label>
-              <input type="password" class="form-input" v-model="registerForm.password" placeholder="Nhập mật khẩu" required>
+              <input type="password" class="form-input" v-model="registerForm.password" placeholder="Nhập mật khẩu"
+                required>
             </div>
             <div class="form-group">
               <label class="form-label">Xác nhận mật khẩu</label>
-              <input type="password" class="form-input" v-model="registerForm.password_confirm" placeholder="Xác nhận mật khẩu" required>
+              <input type="password" class="form-input" v-model="registerForm.password_confirm"
+                placeholder="Xác nhận mật khẩu" required>
             </div>
             <button type="submit" class="btn form-submit">Đăng Ký</button>
           </form>
@@ -44,7 +53,10 @@
       </div>
     </div>
   </section>
+  <div id="toast" v-if="toastMessage" v-html="toastContent"></div>
 </template>
+
+
 
 <script setup>
 import { ref, reactive } from 'vue';
@@ -52,6 +64,8 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
+const toastMessage = ref(false);
+const toastContent = ref("");
 const activeTab = ref('login');
 const registerForm = reactive({
   full_name: "",
@@ -60,30 +74,50 @@ const registerForm = reactive({
   password_confirm: "",
 });
 
+
+
 const loginForm = reactive({
   email: "",
   password: "",
 });
+
+const showToast = (type, icon, title, message) => {
+  toastContent.value =
+    `
+            <div class="toast toast--${type}">
+                    <div class="toast__icon">
+                        <i class="${icon}"></i>
+                    </div>
+                    <div class="toast__body">
+                        <h3 class="toast__title">${title}</h3>
+                        <p class="toast__msg">${message}</p>
+                    </div>
+                    <div class="toast__close" onclick="this.parentElement.remove()">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                </div>
+            `;
+  toastMessage.value = true;
+}
 const login = async () => {
   try {
     const response = await axios.post('http://127.0.0.1:8000/api/login', {
       email: loginForm.email,
       password: loginForm.password
     });
-    // console.log(response);
-    alert('Đăng nhập thành công');
     localStorage.setItem('user', JSON.stringify(response.data.user));
-    router.push('/');
+    showToast('success', 'fa-solid fa-check-circle', 'Thành công', 'Đăng nhập thành công');
+    setTimeout(() => {
+      window.dispatchEvent(new Event('user-login'));
+      toastMessage.value = false;
+      router.push('/');
+    }, 3000);
   } catch (error) {
     if (error.response?.status === 422) {
       const errors = error.response.data.errors;
-      let msg = '❌ Lỗi:\n';
       for (const field in errors) {
-        msg += `- ${errors[field][0]}\n`;
+      showToast('error', 'fas fa-exclamation-circle', 'Thất bại', errors[field][0]);
       }
-      alert(msg);
-    } else {
-      alert(error.response?.data?.message || '❌ Lỗi không xác định');
     }
   }
 }
@@ -96,12 +130,19 @@ const register = async () => {
       password: registerForm.password,
       password_confirmation: registerForm.password_confirm
     })
-    alert('✅ Đăng ký thành công!')
+    showToast('success', 'fa-solid fa-check-circle', 'Thành công', 'Đăng kí thành công');
+    setTimeout(() => {
+      toastMessage.value = false;
+      router.push('/login');
+    }, 3000);
   } catch (error) {
     if (error.response?.status === 422) {
-      alert('❌ Lỗi: \n' + JSON.stringify(error.response.data.errors))
+      console.log(error);
+      // alert('Lỗi: \n' + JSON.stringify(error.response.data.errors))
+      const bellError = Object.values(error.response.data.errors);
+      showToast('error', 'fas fa-exclamation-circle', 'Thất bại', bellError[0]);
     } else {
-      alert('❌ Lỗi không xác định')
+      alert('Lỗi không xác định')
     }
   }
 }
@@ -247,6 +288,8 @@ const switchTab = (tab) => {
 .form-link:hover {
   text-decoration: underline;
 }
+
+
 
 /* Responsive */
 @media (max-width: 768px) {
