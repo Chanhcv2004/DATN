@@ -6,65 +6,11 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
     // Register
      public function register(Request $request)
      {
@@ -141,4 +87,33 @@ class AuthController extends Controller
             'user' => $user
         ]);
     }
+
+    public function autoResetPassword(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email'
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user) {
+        return response()->json(['message' => 'Email không tồn tại trong hệ thống'], 404);
+    }
+
+    // Tạo mật khẩu mới
+    $newPassword = Str::random(8); // vd: x8hY2p9z
+
+    // Lưu vào DB
+    $user->password = Hash::make($newPassword);
+    $user->save();
+
+    // Gửi mật khẩu mới qua email
+    Mail::raw("Mật khẩu mới của bạn là: {$newPassword}", function ($message) use ($user) {
+        $message->to($user->email);
+        $message->subject('Mật khẩu mới');
+    });
+
+    return response()->json(['message' => 'Mật khẩu mới đã được gửi về email của bạn']);
+}
+
 }

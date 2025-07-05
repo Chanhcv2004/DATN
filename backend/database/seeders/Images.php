@@ -76,6 +76,93 @@ class Images extends Seeder
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
+            // Sản phẩm 3: Adidas Ultraboost 21
+            [
+                'url' => 'sanpham3_1.jpg',
+                'image_able_id' => 3,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'url' => 'sanpham3_2.jpg',
+                'image_able_id' => 3,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'url' => 'sanpham3_3.jpg',
+                'image_able_id' => 3,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'url' => 'sanpham3_4.jpg',
+                'image_able_id' => 3,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            // Sản phẩm 4: Adidas Ultraboost 21
+            [
+                'url' => 'sanpham4_1.jpg',
+                'image_able_id' => 4,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'url' => 'sanpham4_2.jpg',
+                'image_able_id' => 4,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'url' => 'sanpham4_3.jpg',
+                'image_able_id' => 4,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'url' => 'sanpham4_4.jpg',
+                'image_able_id' => 4,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            // Sản phẩm 5: Adidas Ultraboost 21
+            [
+                'url' => 'sanpham5_1.jpg',
+                'image_able_id' => 5,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'url' => 'sanpham5_2.jpg',
+                'image_able_id' => 5,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'url' => 'sanpham5_3.jpg',
+                'image_able_id' => 5,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'url' => 'sanpham5_4.jpg',
+                'image_able_id' => 5,
+                'image_able_type' => 'App\Models\Product',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
         ];
 
         DB::table('images')->insert($images);

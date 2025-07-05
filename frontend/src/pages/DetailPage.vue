@@ -196,13 +196,15 @@ const totalStock = computed(() => {
   }, 0);
 });
 
-console.log(userLogin.id);
+// console.log(userLogin.id);
 const sendComment = async () => {
   try {
     if (userLogin || userLogin.id && productId) {
       flagComment.value = true;
       const response = await axios.post(`http://127.0.0.1:8000/api/sendcomment/${ productId }/${ userLogin.id }`, { comment_content: commentForm.comment });
       showToast('success', 'fa-solid fa-check-circle', 'Thành công', 'Đã gửi bình luận');
+      commentForm.comment = ''; // reset nội dung
+      await getCommentByProducted();
       setTimeout(() => {
         toastMessage.value = false;
       }, 3000);

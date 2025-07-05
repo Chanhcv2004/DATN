@@ -65,8 +65,8 @@
           <button class="close-btn" @click="toggleSearchPopup">
             <ion-icon name="close-outline"></ion-icon>
           </button>
-          <form class="search-form">
-            <input type="text" placeholder="Tìm kiếm sản phẩm..." class="search-input">
+          <form class="search-form" @submit.prevent="handleSearchSubmit">
+            <input type="text" v-model="keywordForm.keyword" placeholder="Tìm kiếm sản phẩm..." class="search-input">
             <button type="submit" class="search-submit">
               <ion-icon name="search-outline"></ion-icon>
             </button>
@@ -79,12 +79,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 
 const showSearchPopup = ref(false)
 const user = ref(null);
 const toastMessage = ref(false);
 const toastContent = ref("");
+const router = useRouter()
+const keywordForm = reactive({
+  keyword: ''
+});
 
 const toggleSearchPopup = () => {
   showSearchPopup.value = !showSearchPopup.value
@@ -108,6 +113,18 @@ const handleLogout = () => {
   }, 3000)
   
 };
+
+const handleSearchSubmit = () => {
+  if (!keywordForm.keyword.trim()) return
+
+  // Chuyển sang trang sản phẩm với từ khóa
+  router.push({
+    path: '/product',
+    query: { keyword: keywordForm.keyword }
+  })
+
+  showSearchPopup.value = false
+}
 
 const showToast = (type, icon, title, message) => {
   toastContent.value =

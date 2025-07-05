@@ -22,7 +22,7 @@
                 required>
             </div>
             <button type="submit" class="btn form-submit">Đăng Nhập</button>
-            <a href="#" class="form-link">Quên mật khẩu?</a>
+            <router-link to="/forgot" class="form-link">Quên mật khẩu?</router-link>
           </form>
           <form class="auth-form" :class="{ active: activeTab === 'register' }" id="register-form"
             @submit.prevent="register">
@@ -118,6 +118,8 @@ const login = async () => {
       for (const field in errors) {
       showToast('error', 'fas fa-exclamation-circle', 'Thất bại', errors[field][0]);
       }
+    }else {
+      showToast('error', 'fas fa-exclamation-circle', 'Thất bại', 'Tài khoản hoặc mật khẩu không chính xác');
     }
   }
 }
