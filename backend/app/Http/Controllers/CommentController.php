@@ -84,9 +84,51 @@ class CommentController extends Controller
     public function getCommentByIdProduct($product_id) {
         $dataCommentById = Comment::join('users', 'comments.user_id', '=', 'users.id')
         ->where('comments.product_id', $product_id)
+        ->where('comments.parent_id', null)
         ->select('comments.*', 'users.name_user')
         ->get();
         return response()->json($dataCommentById);
+    }
+
+    public function sendReply(Request $request)
+    {
+        $validated = $request->validate(
+            [
+                'user_id' => 'required|integer',
+                'comment_content' => 'required|string',
+                'product_id' => 'required|exists:products,id',
+                'parent_id' => 'nullable|exists:comments,id',
+            ]
+        );
+
+        $comment = Comment::create([
+            'user_id' => $validated['user_id'],
+            // 'user_id' => auth()->id(),
+            'product_id' => $validated['product_id'],
+            'parent_id' => $validated['parent_id'],
+            'comment_content' => $validated['comment_content'],
+        ]);
+        return response()->json([
+            'message' => 'Gửi trả lời bình luận thành công',
+            'replyComment' => $comment
+        ]);
+    }
+
+    public function getRepliesByProduct() {
+        $replies = Comment::from('comments as c')
+        ->join('users as u', 'c.user_id', '=', 'u.id') // người viết bình luận hiện tại
+        ->leftJoin('comments as c_parent', 'c.parent_id', '=', 'c_parent.id') // comment gốc
+        ->leftJoin('users as u_parent', 'c_parent.user_id', '=', 'u_parent.id') // người viết comment gốc
+        ->whereNotNull('c.parent_id')
+        ->select(
+            'c.*',
+            'u.name_user as current_user_name',
+            'u_parent.name_user as parent_user_name'
+        )
+        ->orderBy('c.created_at', 'asc')
+        ->get();
+
+        return response()->json($replies);
     }
 
 }

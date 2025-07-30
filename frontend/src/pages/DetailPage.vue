@@ -50,20 +50,44 @@
       </div>
       <div class="comments-section">
         <h2 class="comments-title">Bình Luận</h2>
+
         <div class="comment-list">
           <div class="comment-item" v-for="(item_comment, index) in dataCommentByProduct" :key="index">
+            <!-- Bình luận gốc -->
             <div class="comment-header">
               <span class="comment-author">{{ item_comment.name_user }}</span>
               <span class="comment-date">{{ item_comment.created_at }}</span>
             </div>
             <p class="comment-text">{{ item_comment.comment_content }}</p>
+
+            <!-- Danh sách trả lời -->
+            <div class="replies-list" v-if="replies[item_comment.id]">
+              <div class="reply-list" v-for="(reply, index) in replies[item_comment.id]" :key="index">
+                <div class="reply-item">
+                  <div class="comment-header">
+                    <span class="comment-author">{{ reply.current_user_name }}</span>
+                    <span class="comment-date">{{ reply.created_at }}</span>
+                  </div>
+                  <p class="comment-text"><span class="comment-author-reply">{{ reply.parent_user_name }} </span>{{ reply.comment_content }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form trả lời -->
+            <div class="reply-form">
+              <textarea v-model="replyInputs[item_comment.id]" placeholder="Trả lời bình luận này..."
+                class="reply-input"></textarea>
+              <button @click="sendReply(item_comment.id)" class="btn btn-reply">Gửi Trả Lời</button>
+            </div>
           </div>
         </div>
+
+        <!-- Form bình luận chính -->
         <div class="comment-form">
           <div class="form-group">
             <label for="comment-text">Bình Luận</label>
-            <textarea id="comment-text" name="comment-text" v-model="commentForm.comment" placeholder="Nhập bình luận của bạn"
-              required></textarea>
+            <textarea id="comment-text" name="comment-text" v-model="commentForm.comment"
+              placeholder="Nhập bình luận của bạn" required></textarea>
           </div>
           <div class="bellErrorComment" v-if="!flagComment">Vui Lòng Đăng Nhập Để Bình Luận</div>
           <button class="btn btn-primary" @click="sendComment">Gửi Bình Luận</button>
@@ -75,7 +99,8 @@
           <article class="product-card" v-for="(item_relatedProduct, index) in dataRelatedProduct" :key="index">
             <div class="card-banner">
               <span class="card-badge">Sale</span>
-              <img :src="'../src/assets/images/' + item_relatedProduct.images[0].url" alt="Puma RS-X" class="product-img">
+              <img :src="'../src/assets/images/' + item_relatedProduct.images[0].url" alt="Puma RS-X"
+                class="product-img">
               <ul class="card-action-list">
                 <li class="card-action-item">
                   <button class="card-action-btn" aria-labelledby="card-label-10">
@@ -135,6 +160,10 @@ const userLogin = JSON.parse(localStorage.getItem('user'));
 const dataCommentByProduct = ref({});
 const dataRelatedProduct = ref({});
 
+const replyInputs = reactive({});
+
+const replies = ref({});
+
 const showToast = (type, icon, title, message) => {
   toastContent.value =
     `
@@ -173,9 +202,10 @@ const getCommentByProducted = async () => {
     const response = await axios.get('http://127.0.0.1:8000/api/getCommentByIdProduct/' + productId);
     console.log(response.data);
     dataCommentByProduct.value = response.data;
-  } catch(error) {
+  } catch (error) {
     console.log(error)
-;  }
+      ;
+  }
 }
 
 const getRelatedProduct = async () => {
@@ -184,7 +214,7 @@ const getRelatedProduct = async () => {
     const response = await axios.get('http://127.0.0.1:8000/api/getRelatedProduct/' + category_id);
     console.log('Dữ liệu pro', response.data);
     dataRelatedProduct.value = response.data;
-  }catch(error) {
+  } catch (error) {
     console.log(error);
   }
 }
@@ -201,7 +231,7 @@ const sendComment = async () => {
   try {
     if (userLogin || userLogin.id && productId) {
       flagComment.value = true;
-      const response = await axios.post(`http://127.0.0.1:8000/api/sendcomment/${ productId }/${ userLogin.id }`, { comment_content: commentForm.comment });
+      const response = await axios.post(`http://127.0.0.1:8000/api/sendcomment/${productId}/${userLogin.id}`, { comment_content: commentForm.comment });
       showToast('success', 'fa-solid fa-check-circle', 'Thành công', 'Đã gửi bình luận');
       commentForm.comment = ''; // reset nội dung
       await getCommentByProducted();
@@ -222,13 +252,58 @@ const sendComment = async () => {
       showToast('error', 'fas fa-exclamation-circle', 'Lỗi', 'Gửi bình luận thất bại');
     }
   }
-  
+
 }
+
+const sendReply = async (parentId) => {
+  try {
+    const replyText = replyInputs[parentId];
+    if (!replyText) return;
+    const response = await axios.post('http://localhost:8000/api/sendReply', {
+      user_id: userLogin.id,
+      product_id: productId,
+      parent_id: parentId,
+      comment_content: replyText
+    });
+    console.log(response.data);
+    showToast('success', 'fa-solid fa-check-circle', 'Thành công', response.data.message);
+    await fetchReplies();
+    setTimeout(() => {
+      toastMessage.value = false;
+      replyText.value = '';
+
+    }, 3000);
+
+  } catch (error) {
+
+  }
+}
+
+const fetchReplies = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/getRepliesByProduct');
+    const groupedReplies = {};
+
+    response.data.forEach(reply => {
+      const parentId = reply.parent_id;
+      if (!groupedReplies[parentId]) {
+        groupedReplies[parentId] = [];
+      }
+      groupedReplies[parentId].push(reply);
+    });
+
+    replies.value = groupedReplies;
+  } catch (error) {
+    console.error("Lỗi khi lấy replies:", error);
+  }
+}
+
 
 
 onMounted(() => {
   getDataProducted();
   getCommentByProducted();
+  fetchReplies();
 });
 </script>
 
@@ -529,7 +604,7 @@ onMounted(() => {
   gap: 20px;
   margin-bottom: 10px;
 
-   max-height: 300px;
+  max-height: 300px;
   overflow-y: auto;
   padding-right: 10px;
 }
@@ -783,6 +858,44 @@ onMounted(() => {
   .variant {
     width: 100px;
     height: 100px;
+  }
+
+  .reply-list {
+    margin-left: 20px;
+    border-left: 2px solid #ddd;
+    border-top: 2px solid #ddd;
+    padding-left: 10px;
+    margin-top: 10px;
+  }
+
+  .reply-input {
+    width: 100%;
+    margin-top: 5px;
+    padding: 5px;
+  }
+
+  .btn-reply {
+    margin-top: 5px;
+    background: var(--bittersweet);
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 15px;
+  }
+
+  .reply-form {
+    margin-left: 20px;
+    margin-top: 10px;
+  }
+
+  .reply-item {
+    margin-top: 10px;
+  }
+
+  .comment-author-reply {
+    font-weight: bold;
+    color: var(--bittersweet);
+    margin-right: 5px;
   }
 }
 </style>
